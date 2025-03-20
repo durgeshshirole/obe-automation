@@ -63,10 +63,16 @@ app.post("/upload", upload.single("file"), async (req, res) => {
 
         // Define formulas for relevant columns (Fixed Formula Structure)
         const formulaMappings = {
-            5: `IF(D{row}>=8,"Y",'CO internal ATTAINMENT'!K1)`, // Column E
-            7: `IF(F{row}>=7,"Y",'CO internal ATTAINMENT'!K1)`, // Column G
-            9: `IF(H{row}>=18,"Y",'CO internal ATTAINMENT'!K1)`, // Column I
-            13: `IF(L{row}>=2,"Y",'CO internal ATTAINMENT'!K1)`  // Column M
+            5: `IF(D{row}>=8,"Y","N")`,  // Column E
+            7: `IF(F{row}>=7,"Y","N")`,  // Column G
+            9: `IF(H{row}>=18,"Y","N")`, // Column I
+            11: `IF(VALUE(J{row})>=16,"Y","N")`,  // Column K
+            13: `IF(VALUE(L{row})>=2,"Y","N")`,   // Column M (Fixed Duplicate Key)
+            17: `IF(VALUE(P{row})>=7,"Y","N")`,   // Column Q
+            19: `IF(VALUE(R{row})>=18,"Y","N")`,  // Column S
+            21: `IF(VALUE(T{row})>=15,"Y","N")`,  // Column U
+            23: `IF(VALUE(V{row})>=2,"Y","N")`,   // Column W
+            25: `(((P{row}+R{row}+T{row})/3)*0.85)+(V{row}*0.15)`  // Column Y
         };
 
         // Apply formulas only to student rows
@@ -107,3 +113,4 @@ app.use("/processed_files", express.static(path.join(__dirname, "processed_files
 app.listen(port, () => {
     console.log(`Server running on port ${port}`);
 });
+
