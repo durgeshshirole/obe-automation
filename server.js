@@ -1,3 +1,13 @@
+// const express = require("express");
+// const excelRoutes = require("./routes/excelRoutes");
+
+// const app = express();
+// const PORT = 5000;
+
+// app.use(express.json());
+// app.use("/api/excel", excelRoutes);
+
+// app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 const express = require("express");
 const multer = require("multer");
 const ExcelJS = require("exceljs");
@@ -23,42 +33,39 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(filePath);
 
-        // Log all sheet names
-        const sheetNames = workbook.worksheets.map(sheet => sheet.name);
-        console.log("Sheet Names:", sheetNames);
-
-        const sheetName = " PO PSO SPPU ATT "; // Updated to include leading and trailing spaces
+        const sheetName = "CO internal ATTAINMENT";
         const worksheet = workbook.getWorksheet(sheetName);
 
         if (!worksheet) {
-            return res.status(400).json({ error: `Sheet '${sheetName}' not found. Available sheets: ${sheetNames.join(", ")}` });
+            return res.status(400).json({ error: `Sheet '${sheetName}' not found` });
         }
 
-        // Identify student data range correctly
-        let studentStartRow = null;
-        let studentEndRow = null;
-
+        // Identify where student rows start (first row with a numeric roll number)
+        let studentStartRow = 0;
         worksheet.eachRow((row, rowNumber) => {
             const firstCellValue = row.getCell(1).value;
-            if (typeof firstCellValue === "number" && studentStartRow === null) {
-                studentStartRow = rowNumber; // First student row
-            }
-            if (studentStartRow !== null && (firstCellValue === null || firstCellValue === "")) {
-                studentEndRow = rowNumber - 1; // Last student row before an empty row
+            if (typeof firstCellValue === "number" && studentStartRow === 0) {
+                studentStartRow = rowNumber;
             }
         });
 
-        if (studentStartRow === null) {
+        if (studentStartRow === 0) {
             return res.status(400).json({ error: "No student data found" });
         }
-        if (studentEndRow === null) {
-            studentEndRow = worksheet.rowCount; // If no empty row is found, process till the last row
-        }
 
-        // Apply formula to calculate Theory Score in Column F (D + E) for student rows only
-        for (let rowIndex = studentStartRow; rowIndex <= studentEndRow; rowIndex++) {
-            const cell = worksheet.getCell(`F${rowIndex}`);
-            cell.value = { formula: `D${rowIndex} + E${rowIndex}` };
+        // Define formulas for relevant columns
+        const formulaMappings = {
+            5: "IF(VALUE(D{row})>=8,\"Y\",\"N\")", // Column E
+            7: "IF(VALUE(F{row})>=7,\"Y\",\"N\")", // Column G
+            9: "IF(VALUE(H{row})>=18,\"Y\",\"N\")", // Column I
+            13: "IF(VALUE(L{row})>=2,\"Y\",\"N\")" // Column M
+        };
+
+        // Apply formulas to the correct rows
+        for (let rowIndex = studentStartRow; rowIndex <= worksheet.rowCount; rowIndex++) {
+            Object.keys(formulaMappings).forEach((col) => {
+                worksheet.getCell(rowIndex, Number(col)).value = { formula: formulaMappings[col].replace("{row}", rowIndex) };
+            });
         }
 
         // Ensure processed files directory exists
