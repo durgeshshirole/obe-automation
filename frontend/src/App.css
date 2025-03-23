@@ -1,0 +1,94 @@
+/* Navbar Styling */
+.navbar {
+  background: #111;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 30px;
+  position: sticky;
+  top: 0;
+  width: 100%;
+  z-index: 100;
+  box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+}
+
+.navbar img {
+  height: 60px;
+}
+
+/* Main Container */
+.container {
+  max-width: 600px;
+  margin: 50px auto;
+  background: white;
+  padding: 30px;
+  border-radius: 12px;
+  box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.15);
+  text-align: center;
+}
+
+/* File Upload Section */
+.file-upload {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 20px;
+}
+
+/* Buttons */
+.btn {
+  padding: 10px 12px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+/* Upload Button */
+.upload-btn {
+  background: linear-gradient(135deg, #007bff, #0056b3);
+  color: white;
+}
+
+.upload-btn:hover {
+  background: linear-gradient(135deg, #0056b3, #004099);
+  transform: translateY(-2px);
+}
+
+/* Process Button */
+.process-btn {
+  background: linear-gradient(135deg, #28a745, #1e7e34);
+  color: white;
+}
+
+.process-btn:hover {
+  background: linear-gradient(135deg, #1e7e34, #145c24);
+  transform: translateY(-2px);
+}
+
+/* Background Styling */
+body {
+  background: linear-gradient(to right, #f8f9fa, #e9ecef);
+  font-family: "Arial", sans-serif;
+}
+
+.template-btn {
+  background: linear-gradient(135deg, #ff9800, #e65100);
+  color: white;
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.template-btn:hover {
+  background: linear-gradient(135deg, #e65100, #bf360c);
+  transform: translateY(-2px);
+}
