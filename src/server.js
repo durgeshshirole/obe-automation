@@ -57,11 +57,11 @@ app.post("/upload", upload.single("file"), async (req, res) => {
                 formula: `D${rowIndex} + E${rowIndex}`
             };
         }
-        
-        
+
+
         const rowTarget = 8; // PO % ATT row
         const rowSource = 7; // A by M percentage source row
-    
+
         // Column pairs for applying the formula
         const columnMappings = [
             { numerator: "N", denominator: "M", result: "M" },
@@ -74,15 +74,74 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             { numerator: "AB", denominator: "AA", result: "AA" },
             { numerator: "AD", denominator: "AC", result: "AC" },
             { numerator: "AF", denominator: "AE", result: "AE" },
-            { numerator: "AH", denominator: "AG", result: "AG" }
+            { numerator: "AH", denominator: "AG", result: "AG" },
+            { numerator: "AJ", denominator: "AI", result: "AI" },
+            { numerator: "AL", denominator: "AK", result: "AK" },
+            { numerator: "AN", denominator: "AM", result: "AM" },
+            { numerator: "AP", denominator: "AO", result: "AO" },
         ];
-    
+
         columnMappings.forEach(({ numerator, denominator, result }) => {
-            worksheet5.getCell(`${result}${rowTarget}`).value = {
-                formula: `${numerator}${rowSource}/${denominator}${rowSource}*100`
-            };
+            const numCell = worksheet5.getCell(`${numerator}${rowSource}`).value;
+            const denCell = worksheet5.getCell(`${denominator}${rowSource}`).value;
+        
+            // Convert values to numbers or null if they can't be parsed
+            const numValue = isNaN(parseFloat(numCell)) ? null : parseFloat(numCell);
+            const denValue = isNaN(parseFloat(denCell)) ? null : parseFloat(denCell);
+        
+            if (numValue === null || denValue === null || denValue === 0) {
+                worksheet5.getCell(`${result}${rowTarget}`).value = "-";
+            } else {
+                worksheet5.getCell(`${result}${rowTarget}`).value = {
+                    formula: `IF(OR(ISBLANK(${numerator}${rowSource}), ISBLANK(${denominator}${rowSource}), ${denominator}${rowSource}=0), "-", ROUND(${numerator}${rowSource} / ${denominator}${rowSource} * 100, 2))`
+                };
+            }
+        
+            // Auto-adjust column width
+            worksheet5.getColumn(result).width = 15; 
+        });
+        
+        
+
+
+
+        // processing table po pso attainment for ext sppu attainment 
+
+        const columnMapping = {
+            11: 13,  // K14 → M8
+            12: 15,  // L14 → O8
+            13: 17,  // M14 → Q8
+            14: 19,  // N14 → S8
+            15: 21,  // O14 → U8
+            16: 23,  // P14 → W8
+            17: 25,  // Q14 → Y8
+            18: 27,  // R14 → AA8
+            19: 29,  // S14 → AC8
+            20: 31,  // T14 → AE8
+            21: 33,  // U14 → AG8
+            22: 35,  // V14 → AI8
+            23: 37,  // W14 → AK8
+            24: 39,  // X14 → AM8
+            25: 41   // Y14 → AO8
+        };
+
+
+        Object.keys(columnMapping).forEach((targetCol) => {
+            const sourceCol = columnMapping[targetCol];
+
+            // Convert column numbers to Excel letter notation
+            const sourceCellRef = worksheet5.getCell(8, sourceCol).address;
+            const targetCellRef = worksheet5.getCell(14, Number(targetCol)).address;
+
+            // Debugging Log: Check if source cell has a value
+            // console.log(`Mapping ${targetCellRef} → ${sourceCellRef}`);
+
+            // Set formula dynamically
+            worksheet5.getCell(14, Number(targetCol)).value = { formula: `=${sourceCellRef}` };
         });
 
+
+        // sheet 4 
 
         worksheet4.eachRow((row, rowNumber) => {
             const firstCellValue = row.getCell(2).value; // Assuming roll number is in Column A
@@ -107,7 +166,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             21: `IF(T{row}>=15,"Y","N")`,  // Column U
             23: `IF(V{row}>=2,"Y","N")`,   // Column W
             25: `((P{row}+R{row}+T{row})/3)*0.85 + V{row}*0.15`,// Column Y
-            
+
             27: `IF(Z{row}>=7,"Y","N")`,  // Column AA
             29: `IF(AB{row}>=7,"Y","N")`, // Column AC
             31: `IF(AD{row}>=18,"Y","N")`, // Column AE
