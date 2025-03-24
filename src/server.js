@@ -1,13 +1,3 @@
-// const express = require("express");
-// const excelRoutes = require("./routes/excelRoutes");
-
-// const app = express();
-// const PORT = 5000;
-
-// app.use(express.json());
-// app.use("/api/excel", excelRoutes);
-
-// app.listen(PORT, () => console.log(`Server running on http://localhost:${PORT}`));
 const express = require("express");
 const multer = require("multer");
 const ExcelJS = require("exceljs");
@@ -33,19 +23,21 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(filePath);
 
-        const sheetName = "CO internal ATTAINMENT";
-        const worksheet = workbook.getWorksheet(sheetName);
+        const sheetName = " PO PSO SPPU ATT "; // Working on the 5th sheet
+        const worksheet5 = workbook.getWorksheet(sheetName);
+        const sheet4 = "CO internal ATTAINMENT";
+        const worksheet4 = workbook.getWorksheet(sheet4);
 
-        if (!worksheet) {
-            return res.status(400).json({ error: `Sheet '${sheetName}' not found` });
+        if (!worksheet5) {
+            return res.status(400).json({ error: `Sheet '${sheetName5}' not found` });
         }
 
-        // Identify student data start & end rows based on roll number (assumed to be in column 1)
+        // Identify student data start & end rows based on roll number (assumed to be in column A)
         let studentStartRow = 0;
         let studentEndRow = 0;
 
-        worksheet.eachRow((row, rowNumber) => {
-            const firstCellValue = row.getCell(1).value; // Assuming roll number is in Column A
+        worksheet5.eachRow((row, rowNumber) => {
+            const firstCellValue = row.getCell(2).value; // Assuming roll number is in Column A
 
             if (typeof firstCellValue === "number") {
                 if (studentStartRow === 0) {
@@ -59,7 +51,51 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             return res.status(400).json({ error: "No student data found" });
         }
 
-        // Define formulas for relevant columns
+        // **✅ Apply Formula for Theory Marks (Column F) without removing any existing logic**
+        for (let rowIndex = studentStartRow; rowIndex <= studentEndRow; rowIndex++) {
+            worksheet5.getCell(`F${rowIndex}`).value = {
+                formula: `D${rowIndex} + E${rowIndex}`
+            };
+        }
+        
+        
+        const rowTarget = 8; // PO % ATT row
+        const rowSource = 7; // A by M percentage source row
+    
+        // Column pairs for applying the formula
+        const columnMappings = [
+            { numerator: "N", denominator: "M", result: "M" },
+            { numerator: "P", denominator: "O", result: "O" },
+            { numerator: "R", denominator: "Q", result: "Q" },
+            { numerator: "T", denominator: "S", result: "S" },
+            { numerator: "V", denominator: "U", result: "U" },
+            { numerator: "X", denominator: "W", result: "W" },
+            { numerator: "Z", denominator: "Y", result: "Y" },
+            { numerator: "AB", denominator: "AA", result: "AA" },
+            { numerator: "AD", denominator: "AC", result: "AC" },
+            { numerator: "AF", denominator: "AE", result: "AE" },
+            { numerator: "AH", denominator: "AG", result: "AG" }
+        ];
+    
+        columnMappings.forEach(({ numerator, denominator, result }) => {
+            worksheet5.getCell(`${result}${rowTarget}`).value = {
+                formula: `${numerator}${rowSource}/${denominator}${rowSource}*100`
+            };
+        });
+
+
+        worksheet4.eachRow((row, rowNumber) => {
+            const firstCellValue = row.getCell(2).value; // Assuming roll number is in Column A
+
+            if (typeof firstCellValue === "number") {
+                if (studentStartRow === 0) {
+                    studentStartRow = rowNumber; // Set the start row at the first number found
+                }
+                studentEndRow = rowNumber; // Keep updating this to get the last valid roll number row
+            }
+        });
+
+        // **Existing formula mappings (preserved)**
         const formulaMappings = {
             5: `IF(D{row}>=8,"Y","N")`,  // Column E
             7: `IF(F{row}>=7,"Y","N")`,  // Column G
@@ -82,21 +118,12 @@ app.post("/upload", upload.single("file"), async (req, res) => {
             43: `IF(AP{row}>=16,"Y","N")`  // Column AQ
         };
 
-        // **Manually set column N formula without mapping issue**
-        for (let rowIndex = studentStartRow; rowIndex <= studentEndRow; rowIndex++) {
-            worksheet.getCell(`N${rowIndex}`).value = {
-                formula: `=((D${rowIndex}+F${rowIndex}+H${rowIndex})/3)*0.75 + J${rowIndex}*0.15 + L${rowIndex}*0.1`
-            };
-        }
-
-        // Apply formulas from mappings
+        // **Preserved: Apply formulas dynamically**
         for (let rowIndex = studentStartRow; rowIndex <= studentEndRow; rowIndex++) {
             Object.keys(formulaMappings).forEach((col) => {
-                if (col !== "12") { // Skip column N since it is manually handled
-                    const cell = worksheet.getCell(rowIndex, Number(col));
-                    if (!cell.value || cell.value === "") {
-                        cell.value = { formula: formulaMappings[col].replace(/{row}/g, rowIndex) };
-                    }
+                const cell = worksheet4.getCell(rowIndex, Number(col));
+                if (!cell.value || cell.value === "") {
+                    cell.value = { formula: formulaMappings[col].replace(/{row}/g, rowIndex) };
                 }
             });
         }
