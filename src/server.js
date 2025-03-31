@@ -49,7 +49,7 @@ app.post("/upload", upload.single("file"), async (req, res) => {
         });
 
         if (studentStartRow === 0 || studentEndRow === 0) {
-            return res.status(400).json({ error: "No student data found" });
+            return res.status(400).json({ error: "No student data found" });x
         }
 
         // **✅ Apply Formula for Theory Marks (Column F) without removing any existing logic**
