@@ -322,10 +322,11 @@ app.post("/process-excel", upload.single("file"), async (req, res) => {
         const workbook = new ExcelJS.Workbook();
         await workbook.xlsx.readFile(filePath);
 
-        const sheetName = " PO PSO SPPU ATT "; // Working on the 5th sheet
+        const sheetName = " PO PSO SPPU ATT "; 
         const worksheet5 = workbook.getWorksheet(sheetName);
         const sheet4 = "CO internal ATTAINMENT";
         const worksheet4 = workbook.getWorksheet(sheet4);
+        const worksheet6 = workbook.getWorksheet(" PO-PSO int and Ext att");
 
         if (!worksheet5) {
             return res.status(400).json({ error: `Sheet '${sheetName5}' not found` });
@@ -347,7 +348,7 @@ app.post("/process-excel", upload.single("file"), async (req, res) => {
         });
 
         if (studentStartRow === 0 || studentEndRow === 0) {
-            return res.status(400).json({ error: "No student data found" });
+            return res.status(400).json({ error: "No student data found" });x
         }
 
         // **✅ Apply Formula for Theory Marks (Column F) without removing any existing logic**
@@ -357,12 +358,28 @@ app.post("/process-excel", upload.single("file"), async (req, res) => {
             };
         }
 
+          // Mapping the values for M and A form 6th sheet (PO PSO int and Ext att)
+
+        if(!worksheet6){
+            return res.status(400).json({ error: `Sheet '${sheetName6}' not found` });
+        }
+
+        // worksheet6.getRow(25).eachCell((cell, colNumber) => {
+        //     let value = cell.value;
+        
+        //     // If the cell has a formula, extract only its result value
+        //     if (typeof value === "object" && value.formula) {
+        //         value = cell.result; // Extract the computed value
+        //     }
+        
+        //     worksheet5.getCell(7, colNumber).value = value; // Update row 7 in sheet 5
+        // }); 
 
         const rowTarget = 8; // PO % ATT row
         const rowSource = 7; // A by M percentage source row
 
         // Column pairs for applying the formula
-        const columnMappings = [
+        const columnMappings = [    
             { numerator: "N", denominator: "M", result: "M" },
             { numerator: "P", denominator: "O", result: "O" },
             { numerator: "R", denominator: "Q", result: "Q" },
